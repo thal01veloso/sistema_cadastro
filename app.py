@@ -194,7 +194,7 @@ def uploaded_file(filename):
 @app.route('/listar_clientes')
 @login_required
 def listar_clientes():
-    clientes = db_query("SELECT * FROM clientes")
+    clientes = db_query("SELECT * FROM clientes order by nome asc")
     return render_template('listar.html', clientes=clientes)
 
 # Error handlers
