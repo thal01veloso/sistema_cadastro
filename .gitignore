@@ -28,3 +28,7 @@ __pycache__/
 # Logs e arquivos de desenvolvimento
 logs/
 *.log
+
+# imagens de banco
+statc/uploads
+*.png
