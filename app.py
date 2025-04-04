@@ -216,6 +216,35 @@ def internal_server_error(e):
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+@app.route('/excluir_cliente/<int:id>', methods=['POST'])
+@login_required
+def excluir_cliente(id):
+    try:
+        # Primeiro obtém o nome do arquivo da foto se existir
+        cliente = db_query(
+            "SELECT foto FROM clientes WHERE id = %s",
+            (id,),
+            fetchone=True
+        )
+        
+        # Exclui o cliente do banco de dados
+        db_commit(
+            "DELETE FROM clientes WHERE id = %s",
+            (id,)
+        )
+        
+        # Se existia uma foto, exclui do sistema de arquivos
+        if cliente and cliente['foto']:
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], cliente['foto']))
+            except OSError as e:
+                logger.error(f"Erro ao excluir foto: {e}")
+        
+        flash('Cliente excluído com sucesso!', 'success')
+    except Exception as e:
+        flash(f'Erro ao excluir cliente: {str(e)}', 'danger')
+    
+    return redirect(url_for('listar_clientes'))
 
 if __name__ == '__main__':
     app.run(debug=os.getenv('FLASK_DEBUG', 'False') == 'True')

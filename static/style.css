@@ -435,3 +435,32 @@ a, button, input, .form-control {
   margin-top: 10px;
   display: none;
 }
+
+.delete-form {
+  display: inline; /* Mantém o formulário na mesma linha */
+  margin: 0;
+  padding: 0;
+}
+
+/* Estilo para os botões de ação (manter existente) */
+.btn-action {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-delete {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #d33;
+  transform: translateY(-1px);
+}

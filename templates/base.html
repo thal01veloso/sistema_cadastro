@@ -32,6 +32,14 @@
             });
         }
     });
+    // Confirmação antes de excluir
+    document.querySelectorAll('.delete-form').forEach(form => {
+    form.addEventListener('submit', (e) => {
+        if (!confirm('Tem certeza que deseja excluir este cliente permanentemente?')) {
+            e.preventDefault();
+        }
+    });
+});
 </script>
 <body>
     <header>
@@ -72,7 +80,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2023 Sistema de Clientes. Todos os direitos reservados.</p>
+            <p>&copy; 2025 Sistema de Clientes. Todos os direitos reservados.</p>
         </div>
     </footer>
 </body>

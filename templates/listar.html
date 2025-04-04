@@ -36,9 +36,11 @@
                         <button class="btn-action btn-edit">
                             <i class="fas fa-edit"></i> Editar
                         </button>
-                        <button class="btn-action btn-delete">
-                            <i class="fas fa-trash-alt"></i> Excluir
-                        </button>
+                        <form action="{{ url_for('excluir_cliente', id=cliente.id) }}" method="POST" class="delete-form">
+                            <button type="submit" class="btn-action btn-delete" onclick="return confirm('Tem certeza que deseja excluir este cliente?')">
+                                <i class="fas fa-trash-alt"></i> Excluir
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
