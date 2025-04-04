@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory  # Adicione send_from_directory
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from functools import wraps
 from dotenv import load_dotenv
-import os
 import logging
-
+import os
 # Configuração inicial
 load_dotenv()
 
@@ -16,8 +16,21 @@ app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
 app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2MB
+
+
+
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+
 
 mysql = MySQL(app)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
@@ -149,9 +162,18 @@ def index():
 def cadastrar_clientes():
     if request.method == 'POST':
         try:
+            # Processar upload da foto
+            foto = None
+            if 'foto' in request.files:
+                file = request.files['foto']
+                if file and file.filename != '' and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    foto = filename
+
             db_commit(
-                "INSERT INTO clientes (nome, email, telefone) VALUES (%s, %s, %s)",
-                (request.form['nome'], request.form['email'], request.form['telefone'])
+                "INSERT INTO clientes (nome, email, telefone, foto) VALUES (%s, %s, %s, %s)",
+                (request.form['nome'], request.form['email'], request.form['telefone'], foto)
             )
             flash('Cliente cadastrado com sucesso!', 'success')
             return redirect(url_for('listar_clientes'))
@@ -160,6 +182,14 @@ def cadastrar_clientes():
             return redirect(url_for('cadastrar_clientes'))
 
     return render_template('cadastrar.html')
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except FileNotFoundError:
+        # Se o arquivo não existir, retorna o ícone padrão
+        return redirect(url_for('static', filename='img/default-user.png'))
 
 @app.route('/listar_clientes')
 @login_required

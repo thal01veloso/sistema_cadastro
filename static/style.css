@@ -400,3 +400,38 @@ a, button, input, .form-control {
       grid-template-columns: 1fr;
   }
 }
+
+/* Estilos para upload de fotos */
+.form-control[type="file"] {
+  padding: 0.5rem;
+  border: 1px dashed var(--gray-medium);
+}
+
+.form-control[type="file"]:focus {
+  border-color: var(--primary-color);
+  box-shadow: none;
+}
+
+/* Estilos para fotos de clientes */
+.client-photo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--secondary-color);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.client-photo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Preview de imagem (opcional) */
+.image-preview {
+  max-width: 200px;
+  max-height: 200px;
+  margin-top: 10px;
+  display: none;
+}

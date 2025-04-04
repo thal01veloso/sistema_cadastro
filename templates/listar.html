@@ -17,8 +17,14 @@
         <div class="cliente-card-wrapper">
             <div class="cliente-card">
                 <div class="client-avatar">
-                    <!-- Placeholder para foto futura -->
+                    {% if cliente.foto %}
+                    <img src="{{ url_for('uploaded_file', filename=cliente.foto) }}" 
+                         alt="{{ cliente.nome }}" 
+                         class="client-photo"
+                         onerror="this.onerror=null;this.src='#';this.parentElement.innerHTML='<i class=\'fas fa-user-circle fa-4x\'></i>'">
+                    {% else %}
                     <i class="fas fa-user-circle fa-4x"></i>
+                    {% endif %}
                 </div>
                 
                 <div class="card-body">

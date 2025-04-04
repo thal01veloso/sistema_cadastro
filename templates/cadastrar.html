@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container mt-4">
     <h2>Cadastrar Novo Cliente</h2>
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="nome" class="form-label">Nome</label>
             <input type="text" class="form-control" id="nome" name="nome" required>
@@ -14,6 +14,11 @@
         <div class="mb-3">
             <label for="telefone" class="form-label">Telefone</label>
             <input type="text" class="form-control" id="telefone" name="telefone">
+        </div>
+        <div class="mb-3">
+            <label for="foto" class="form-label">Foto do Cliente</label>
+            <input type="file" class="form-control" id="foto" name="foto" accept="image/*">
+            <small class="text-muted">Formatos aceitos: JPG, PNG, GIF (Máx. 2MB)</small>
         </div>
         <button type="submit" class="btn btn-primary">Cadastrar</button>
     </form>
