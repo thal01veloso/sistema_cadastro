@@ -200,11 +200,22 @@ def listar_clientes():
 # Error handlers
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+    try:
+        return render_template('404.html'), 404
+    except:
+        return "Página não encontrada", 404
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    return render_template('500.html'), 500
+    try:
+        return render_template('500.html'), 500
+    except:
+        return "Erro interno do servidor", 500
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                              'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
     app.run(debug=os.getenv('FLASK_DEBUG', 'False') == 'True')

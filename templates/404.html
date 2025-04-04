@@ -1,0 +1,10 @@
+<!-- templates/404.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2 class="card-title">Página Não Encontrada (404)</h2>
+    <p>A página que você está procurando não existe.</p>
+    <a href="{{ url_for('index') }}" class="btn">Voltar à página inicial</a>
+</div>
+{% endblock %}
