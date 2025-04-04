@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="card">
-    <div class="flex justify-between items-center">
+    <div class="flex justify-between items-center mb-6">
         <h2 class="card-title">Clientes Cadastrados</h2>
         <a href="{{ url_for('cadastrar_clientes') }}" class="btn">
             <i class="fas fa-plus"></i> Novo Cliente
@@ -12,40 +12,41 @@
     </div>
     
     {% if clientes %}
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>E-mail</th>
-                    <th>Telefone</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for cliente in clientes %}
-                <tr>
-                    <td>{{ cliente.nome }}</td>
-                    <td>{{ cliente.email }}</td>
-                    <td>{{ cliente.telefone }}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-edit">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn-action btn-delete">
-                                <i class="fas fa-trash-alt"></i> Excluir
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="cards-container">
+        {% for cliente in clientes %}
+        <div class="cliente-card-wrapper">
+            <div class="cliente-card">
+                <div class="client-avatar">
+                    <!-- Placeholder para foto futura -->
+                    <i class="fas fa-user-circle fa-4x"></i>
+                </div>
+                
+                <div class="card-body">
+                    <h3 class="card-title">{{ cliente.nome }}</h3>
+                    <p class="card-text"><i class="fas fa-envelope"></i> {{ cliente.email }}</p>
+                    <p class="card-text"><i class="fas fa-phone"></i> {{ cliente.telefone or 'Não informado' }}</p>
+                    
+                    <div class="action-buttons mt-3">
+                        <button class="btn-action btn-edit">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn-action btn-delete">
+                            <i class="fas fa-trash-alt"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
     {% else %}
-    <p class="text-gray-500">Nenhum cliente cadastrado ainda.</p>
+    <div class="empty-state">
+        <i class="fas fa-users fa-3x"></i>
+        <p>Nenhum cliente cadastrado ainda.</p>
+        <a href="{{ url_for('cadastrar_clientes') }}" class="btn mt-3">
+            <i class="fas fa-plus"></i> Cadastrar Primeiro Cliente
+        </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
