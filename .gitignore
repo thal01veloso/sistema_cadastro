@@ -1,0 +1,30 @@
+# .gitignore
+
+# Arquivos de ambiente
+.env
+.env.local
+
+# Diretório de ambiente virtual
+venv/
+env/
+
+# Arquivos do Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyd
+*.pyo
+
+# Arquivos de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Arquivos de banco de dados
+*.db
+*.sqlite3
+
+# Logs e arquivos de desenvolvimento
+logs/
+*.log

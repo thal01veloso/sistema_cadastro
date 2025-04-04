@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Novo Usuário{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 class="card-title">Registrar Novo Usuário</h2>
+    <form method="POST" id="registerForm">
+        <div class="form-group">
+            <label for="nome"><i class="fas fa-user"></i> Nome Completo</label>
+            <input type="text" id="nome" name="nome" class="form-control" required 
+                   value="{{ request.form.nome if request.form }}">
+        </div>
+        <div class="form-group">
+            <label for="username"><i class="fas fa-at"></i> Nome de Usuário</label>
+            <input type="text" id="username" name="username" class="form-control" required 
+                   value="{{ request.form.username if request.form }}">
+            <small class="text-muted">Este será seu nome de login</small>
+        </div>
+        <div class="form-group">
+            <label for="password"><i class="fas fa-lock"></i> Senha</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+            <small class="text-muted">Mínimo de 8 caracteres</small>
+            <div class="password-strength">
+                <div class="strength-bar" id="strengthBar"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password"><i class="fas fa-lock"></i> Confirmar Senha</label>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+        </div>
+        
+        <div class="flex items-center justify-between mt-4">
+            <button type="submit" class="btn" id="registerBtn">
+                <i class="fas fa-user-plus"></i> Registrar
+            </button>
+            <a href="{{ url_for('login') }}" class="text-primary hover:underline">
+                <i class="fas fa-sign-in-alt"></i> Já tem conta? Faça login
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const password = document.getElementById('password');
+    const strengthBar = document.getElementById('strengthBar');
+    
+    password.addEventListener('input', function() {
+        const strength = calculateStrength(this.value);
+        updateStrengthBar(strength);
+    });
+    
+    function calculateStrength(password) {
+        let strength = 0;
+        if (password.length > 0) strength += 1;
+        if (password.length >= 8) strength += 1;
+        if (/[A-Z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+        return strength;
+    }
+    
+    function updateStrengthBar(strength) {
+        const colors = ['#ff0000', '#ff5a00', '#ff9a00', '#ffce00', '#00ff00'];
+        const width = strength * 20;
+        strengthBar.style.width = width + '%';
+        strengthBar.style.backgroundColor = colors[strength - 1] || '#dddddd';
+    }
+});
+</script>
+{% endblock %}

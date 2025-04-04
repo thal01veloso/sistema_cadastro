@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Clientes{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="flex justify-between items-center">
+        <h2 class="card-title">Clientes Cadastrados</h2>
+        <a href="{{ url_for('cadastrar_clientes') }}" class="btn">
+            <i class="fas fa-plus"></i> Novo Cliente
+        </a>
+    </div>
+    
+    {% if clientes %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr>
+                    <td>{{ cliente.nome }}</td>
+                    <td>{{ cliente.email }}</td>
+                    <td>{{ cliente.telefone }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-edit">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-action btn-delete">
+                                <i class="fas fa-trash-alt"></i> Excluir
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-gray-500">Nenhum cliente cadastrado ainda.</p>
+    {% endif %}
+</div>
+{% endblock %}

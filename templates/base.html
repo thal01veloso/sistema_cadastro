@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Clientes | {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">ClientSys</div>
+            <nav>
+                <ul>
+                    {% if 'logged_in' in session %}
+                    <li class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span>{{ session['nome'] }}</span>
+                    </li>
+                    <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                    {% else %}
+                    <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                    <li><a href="{{ url_for('registrar') }}"><i class="fas fa-user-plus"></i> Registrar</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Sistema de Clientes. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+</body>
+<!-- Adicione isso antes do </body> -->
+<script>
+    // Função para esconder mensagens flash após 2 segundos
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                
+                // Remove completamente o elemento após a animação
+                setTimeout(() => {
+                    alert.remove();
+                }, 500);
+            }, 2000); // 2000ms = 2 segundos
+        });
+    });
+    </script>
+</html>

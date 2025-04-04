@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h4>Detalhes do Cliente</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <div class="client-avatar mb-3">
+                        <i class="fas fa-user-circle fa-5x"></i> <!-- Ícone placeholder -->
+                    </div>
+                    <h3>{{ cliente['nome'] }}</h3>
+                </div>
+                <div class="col-md-8">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>ID:</strong> {{ cliente['id'] }}</li>
+                        <li class="list-group-item"><strong>E-mail:</strong> {{ cliente['email'] }}</li>
+                        <li class="list-group-item"><strong>Telefone:</strong> {{ cliente['telefone'] }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="{{ url_for('listar_clientes') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+<div class="detalhes-footer">
+    <a href="{{ url_for('listar_clientes') }}" class="btn-voltar">
+        <i class="fas fa-arrow-left"></i> Voltar para Clientes
+    </a>
+</div>
+{% endblock %}
