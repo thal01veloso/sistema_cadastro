@@ -30,5 +30,5 @@ logs/
 *.log
 
 # imagens de banco
-statc/uploads
+static/uploads
 *.png
