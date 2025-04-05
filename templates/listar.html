@@ -28,16 +28,26 @@
                 </div>
                 
                 <div class="card-body">
+                    <!-- Nome do cliente -->
                     <h3 class="card-title">{{ cliente.nome }}</h3>
-                    <p class="card-text"><i class="fas fa-envelope"></i> {{ cliente.email }}</p>
-                    <p class="card-text"><i class="fas fa-phone"></i> {{ cliente.telefone or 'Não informado' }}</p>
                     
-                    <div class="action-buttons mt-3">
-                        <div class="action-buttons">
-                            <a href="{{ url_for('editar_cliente', id=cliente.id) }}" class="btn-action btn-edit">
-                                <i class="fas fa-edit"></i> Editar
-                            </a>
-                        </div>
+                    <!-- Email -->
+                    <div class="info-row">
+                        <i class="fas fa-envelope"></i>
+                        <span class="info-text">{{ cliente.email }}</span>
+                    </div>
+                    
+                    <!-- Telefone -->
+                    <div class="info-row">
+                        <i class="fas fa-phone"></i>
+                        <span class="info-text">{{ cliente.telefone or 'Não informado' }}</span>
+                    </div>
+                    
+                    <!-- Botões de ação -->
+                    <div class="action-buttons">
+                        <a href="{{ url_for('editar_cliente', id=cliente.id) }}" class="btn-action btn-edit">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
                         <form action="{{ url_for('excluir_cliente', id=cliente.id) }}" method="POST" class="delete-form">
                             <button type="submit" class="btn-action btn-delete" onclick="return confirm('Tem certeza que deseja excluir este cliente?')">
                                 <i class="fas fa-trash-alt"></i> Excluir
