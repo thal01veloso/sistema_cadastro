@@ -103,4 +103,28 @@
         });
     });
     </script>
+<script>
+    // Preview da nova imagem antes de enviar o formulário
+    document.getElementById('foto')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                let preview = document.querySelector('.client-photo-preview');
+                if (!preview) {
+                    const container = document.querySelector('.current-photo');
+                    if (container) {
+                        preview = document.createElement('img');
+                        preview.className = 'client-photo-preview';
+                        container.insertBefore(preview, container.firstChild);
+                    }
+                }
+                if (preview) {
+                    preview.src = event.target.result;
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    </script>
 </html>

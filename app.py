@@ -246,5 +246,70 @@ def excluir_cliente(id):
     
     return redirect(url_for('listar_clientes'))
 
+
+@app.route('/editar_cliente/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_cliente(id):
+    if request.method == 'GET':
+        # Busca os dados atuais do cliente
+        cliente = db_query(
+            "SELECT * FROM clientes WHERE id = %s",
+            (id,),
+            fetchone=True
+        )
+        if not cliente:
+            flash('Cliente não encontrado!', 'danger')
+            return redirect(url_for('listar_clientes'))
+        
+        return render_template('editar.html', cliente=cliente)
+    
+    elif request.method == 'POST':
+        try:
+            # Processa os dados do formulário
+            nome = request.form.get('nome', '').strip()
+            email = request.form.get('email', '').strip()
+            telefone = request.form.get('telefone', '').strip()
+            
+            # Processa o upload da nova foto (se fornecida)
+            nova_foto = None
+            if 'foto' in request.files:
+                file = request.files['foto']
+                if file and file.filename != '' and allowed_file(file.filename):
+                    # Remove a foto antiga se existir
+                    cliente_atual = db_query(
+                        "SELECT foto FROM clientes WHERE id = %s",
+                        (id,),
+                        fetchone=True
+                    )
+                    if cliente_atual and cliente_atual['foto']:
+                        try:
+                            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], cliente_atual['foto']))
+                        except OSError as e:
+                            logger.error(f"Erro ao excluir foto antiga: {e}")
+                    
+                    # Salva a nova foto
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    nova_foto = filename
+            
+            # Atualiza no banco de dados
+            if nova_foto:
+                db_commit(
+                    "UPDATE clientes SET nome = %s, email = %s, telefone = %s, foto = %s WHERE id = %s",
+                    (nome, email, telefone, nova_foto, id)
+                )
+            else:
+                db_commit(
+                    "UPDATE clientes SET nome = %s, email = %s, telefone = %s WHERE id = %s",
+                    (nome, email, telefone, id)
+                )
+            
+            flash('Cliente atualizado com sucesso!', 'success')
+            return redirect(url_for('listar_clientes'))
+        
+        except Exception as e:
+            flash(f'Erro ao atualizar cliente: {str(e)}', 'danger')
+            return redirect(url_for('editar_cliente', id=id))
+
 if __name__ == '__main__':
     app.run(debug=os.getenv('FLASK_DEBUG', 'False') == 'True')
