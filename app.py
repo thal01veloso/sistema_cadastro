@@ -311,5 +311,20 @@ def editar_cliente(id):
             flash(f'Erro ao atualizar cliente: {str(e)}', 'danger')
             return redirect(url_for('editar_cliente', id=id))
 
+@app.route('/buscar_clientes')
+@login_required
+def buscar_clientes():
+    nome = request.args.get('nome', '').strip()
+    
+    if nome:
+        clientes = db_query(
+            "SELECT * FROM clientes WHERE nome LIKE %s ORDER BY nome",
+            (f"%{nome}%",)
+        )
+    else:
+        clientes = db_query("SELECT * FROM clientes ORDER BY nome")
+    
+    return render_template('_clientes_partial.html', clientes=clientes)
+
 if __name__ == '__main__':
     app.run(debug=os.getenv('FLASK_DEBUG', 'False') == 'True')

@@ -11,62 +11,68 @@
         </a>
     </div>
     
-    {% if clientes %}
-    <div class="cards-container">
-        {% for cliente in clientes %}
-        <div class="cliente-card-wrapper">
-            <div class="cliente-card">
-                <div class="client-avatar">
-                    {% if cliente.foto %}
-                    <img src="{{ url_for('uploaded_file', filename=cliente.foto) }}" 
-                         alt="{{ cliente.nome }}" 
-                         class="client-photo"
-                         onerror="this.onerror=null;this.src='#';this.parentElement.innerHTML='<i class=\'fas fa-user-circle fa-4x\'></i>'">
-                    {% else %}
-                    <i class="fas fa-user-circle fa-4x"></i>
-                    {% endif %}
-                </div>
-                
-                <div class="card-body">
-                    <!-- Nome do cliente -->
-                    <h3 class="card-title">{{ cliente.nome }}</h3>
-                    
-                    <!-- Email -->
-                    <div class="info-row">
-                        <i class="fas fa-envelope"></i>
-                        <span class="info-text">{{ cliente.email }}</span>
-                    </div>
-                    
-                    <!-- Telefone -->
-                    <div class="info-row">
-                        <i class="fas fa-phone"></i>
-                        <span class="info-text">{{ cliente.telefone or 'Não informado' }}</span>
-                    </div>
-                    
-                    <!-- Botões de ação -->
-                    <div class="action-buttons">
-                        <a href="{{ url_for('editar_cliente', id=cliente.id) }}" class="btn-action btn-edit">
-                            <i class="fas fa-edit"></i> Editar
-                        </a>
-                        <form action="{{ url_for('excluir_cliente', id=cliente.id) }}" method="POST" class="delete-form">
-                            <button type="submit" class="btn-action btn-delete" onclick="return confirm('Tem certeza que deseja excluir este cliente?')">
-                                <i class="fas fa-trash-alt"></i> Excluir
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+    <!-- Campo de busca -->
+    <div class="search-container mb-4">
+        <input type="text" id="searchInput" placeholder="Buscar por nome..." class="form-control search-input">
+        <i class="fas fa-search search-icon"></i>
     </div>
-    {% else %}
-    <div class="empty-state">
-        <i class="fas fa-users fa-3x"></i>
-        <p>Nenhum cliente cadastrado ainda.</p>
-        <a href="{{ url_for('cadastrar_clientes') }}" class="btn mt-3">
-            <i class="fas fa-plus"></i> Cadastrar Primeiro Cliente
-        </a>
+    
+    <!-- Container dos cards (será atualizado via JavaScript) -->
+    <div id="clientesContainer" class="cards-container">
+        {% include '_clientes_partial.html' %}
     </div>
-    {% endif %}
 </div>
+
+<!-- Template para quando não houver resultados -->
+<template id="noResultsTemplate">
+    <div class="empty-state">
+        <i class="fas fa-search fa-3x"></i>
+        <p>Nenhum cliente encontrado com esse nome.</p>
+    </div>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const clientesContainer = document.getElementById('clientesContainer');
+    const noResultsTemplate = document.getElementById('noResultsTemplate');
+    
+    // Função para buscar clientes
+    const buscarClientes = debounce(async (termo) => {
+        try {
+            const response = await fetch(`/buscar_clientes?nome=${encodeURIComponent(termo)}`);
+            const html = await response.text();
+            
+            if (html.trim() === '') {
+                // Mostra template de "nenhum resultado"
+                const noResults = noResultsTemplate.content.cloneNode(true);
+                clientesContainer.innerHTML = '';
+                clientesContainer.appendChild(noResults);
+            } else {
+                // Atualiza a lista
+                clientesContainer.innerHTML = html;
+            }
+        } catch (error) {
+            console.error('Erro na busca:', error);
+        }
+    }, 300);
+    
+    // Event listener para o input
+    searchInput.addEventListener('input', (e) => {
+        const termo = e.target.value.trim();
+        if (termo.length >= 2 || termo.length === 0) {
+            buscarClientes(termo);
+        }
+    });
+    
+    // Função para debounce (evitar muitas requisições)
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+});
+</script>
 {% endblock %}
