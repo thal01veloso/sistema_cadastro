@@ -395,26 +395,47 @@ def agendar_cobranca(cliente_id):
 @login_required
 def enviar_cobranca(cobranca_id):
     try:
+        # Consulta revisada para garantir todos os dados necessários
         cobranca = db_query(
-            "SELECT c.*, cl.nome, cl.telefone FROM cobrancas c JOIN clientes cl ON c.cliente_id = cl.id WHERE c.id = %s",
+            """SELECT c.*, cl.nome, cl.telefone 
+               FROM cobrancas c 
+               JOIN clientes cl ON c.cliente_id = cl.id 
+               WHERE c.id = %s""",
             (cobranca_id,),
             fetchone=True
         )
         
         if not cobranca:
             flash('Cobrança não encontrada!', 'danger')
-            return redirect(url_for('listar_clientes'))
+            return redirect(url_for('listar_cobrancas'))
+        
+        # Verifica se existe telefone
+        if not cobranca['telefone']:
+            flash('Cliente não possui telefone cadastrado!', 'danger')
+            return redirect(url_for('listar_cobrancas'))
         
         # Formata a mensagem
-        mensagem = f"Olá {cobranca['nome']},\n\n"
-        mensagem += f"Segue cobrança no valor de R$ {cobranca['valor']:.2f}"
+        mensagem = (
+            f"Olá {cobranca['nome']},\n\n"
+            f"Segue cobrança no valor de R$ {float(cobranca['valor']):.2f}"
+        )
+        
         if cobranca['descricao']:
             mensagem += f" referente a: {cobranca['descricao']}\n\n"
-        mensagem += "Por favor, efetue o pagamento o mais breve possível.\n"
-        mensagem += "Agradecemos pela atenção!"
+        else:
+            mensagem += "\n\n"
         
-        # Remove caracteres não numéricos do telefone
+        mensagem += (
+            "Por favor, efetue o pagamento o mais breve possível.\n"
+            "Agradecemos pela atenção!"
+        )
+        
+        # Formata o telefone corretamente
         telefone = ''.join(filter(str.isdigit, cobranca['telefone']))
+        
+        # Verifica se tem código de país (adiciona +55 se não tiver)
+        if not telefone.startswith('55') and len(telefone) <= 11:
+            telefone = '55' + telefone
         
         # Atualiza status da cobrança
         db_commit(
@@ -422,13 +443,22 @@ def enviar_cobranca(cobranca_id):
             (cobranca_id,)
         )
         
-        # Redireciona para o WhatsApp
-        whatsapp_url = f"https://wa.me/{telefone}?text={mensagem}"
+        # Codifica a mensagem para URL
+        from urllib.parse import quote
+        mensagem_codificada = quote(mensagem)
+        
+        # Cria o link do WhatsApp
+        whatsapp_url = f"https://wa.me/{telefone}?text={mensagem_codificada}"
+        
+        # Debug - mostra o link no console
+        print(f"Link do WhatsApp gerado: {whatsapp_url}")
+        
         return redirect(whatsapp_url)
         
     except Exception as e:
+        logger.error(f"Erro ao enviar cobrança: {str(e)}")
         flash(f'Erro ao enviar cobrança: {str(e)}', 'danger')
-        return redirect(url_for('listar_clientes'))
+        return redirect(url_for('listar_cobrancas'))
 
 @app.route('/listar_cobrancas')
 @login_required
@@ -447,8 +477,6 @@ def listar_cobrancas():
     cobrancas = db_query(query)
     
     # Debug para verificar os dados
-    print("Cobranças encontradas:", cobrancas)
-    
     return render_template('listar_cobrancas.html', cobrancas=cobrancas)
 
 if __name__ == '__main__':
