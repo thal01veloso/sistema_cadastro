@@ -536,3 +536,70 @@ a, button, input, .form-control {
   box-shadow: 0 0 0 3px rgba(136, 192, 208, 0.2);
   border-color: var(--secondary-color);
 }
+/* Adicione estas regras ao seu arquivo style.css */
+
+/* Estilo para o botão de Agendar Cobrança */
+.btn-whatsapp {
+  background-color: #25D366; /* Verde do WhatsApp */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+}
+
+.btn-whatsapp:hover {
+  background-color: #1da851; /* Verde mais escuro para hover */
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-whatsapp i {
+  font-size: 14px;
+}
+
+/* Estilo para quando não há telefone cadastrado */
+.btn-whatsapp.disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-whatsapp.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Ajuste para os botões de ação */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Efeito de hover consistente para todos os botões de ação */
+.btn-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Ajuste de responsividade para os botões */
+@media (max-width: 480px) {
+  .action-buttons {
+      flex-direction: column;
+      align-items: stretch;
+  }
+  
+  .btn-action {
+      width: 100%;
+      justify-content: center;
+  }
+}

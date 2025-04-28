@@ -33,6 +33,11 @@
                             <i class="fas fa-trash-alt"></i> Excluir
                         </button>
                     </form>
+                    {% if cliente.telefone %}
+                    <a href="{{ url_for('agendar_cobranca', cliente_id=cliente.id) }}" class="btn-action btn-whatsapp">
+                        <i class="fas fa-calendar-alt"></i> Agendar Cobrança
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

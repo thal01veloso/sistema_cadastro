@@ -6,6 +6,8 @@ from functools import wraps
 from dotenv import load_dotenv
 import logging
 import os
+from datetime import datetime
+
 # Configuração inicial
 load_dotenv()
 
@@ -325,6 +327,90 @@ def buscar_clientes():
         clientes = db_query("SELECT * FROM clientes ORDER BY nome")
     
     return render_template('_clientes_partial.html', clientes=clientes)
+@app.route('/agendar_cobranca/<int:cliente_id>', methods=['GET', 'POST'])
+@login_required
+def agendar_cobranca(cliente_id):
+    cliente = db_query(
+        "SELECT * FROM clientes WHERE id = %s",
+        (cliente_id,),
+        fetchone=True
+    )
+    
+    if not cliente:
+        flash('Cliente não encontrado!', 'danger')
+        return redirect(url_for('listar_clientes'))
+    
+    if request.method == 'POST':
+        try:
+            valor = request.form.get('valor', '').strip()
+            descricao = request.form.get('descricao', '').strip()
+            data_agendamento = request.form.get('data_agendamento', '').strip()
+            
+            # Validações
+            if not all([valor, data_agendamento]):
+                flash('Valor e data são obrigatórios!', 'danger')
+                return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
+            
+            try:
+                valor_float = float(valor)
+                data_obj = datetime.strptime(data_agendamento, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash('Formato inválido para valor ou data!', 'danger')
+                return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
+            
+            # Insere no banco de dados
+            db_commit(
+                "INSERT INTO cobrancas (cliente_id, valor, descricao, data_agendamento) VALUES (%s, %s, %s, %s)",
+                (cliente_id, valor_float, descricao, data_obj)
+            )
+            
+            flash('Cobrança agendada com sucesso!', 'success')
+            return redirect(url_for('listar_clientes'))
+            
+        except Exception as e:
+            flash(f'Erro ao agendar cobrança: {str(e)}', 'danger')
+            return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
+    
+    return render_template('agendar_cobranca.html', cliente=cliente)
+
+@app.route('/enviar_cobranca/<int:cobranca_id>')
+@login_required
+def enviar_cobranca(cobranca_id):
+    try:
+        cobranca = db_query(
+            "SELECT c.*, cl.nome, cl.telefone FROM cobrancas c JOIN clientes cl ON c.cliente_id = cl.id WHERE c.id = %s",
+            (cobranca_id,),
+            fetchone=True
+        )
+        
+        if not cobranca:
+            flash('Cobrança não encontrada!', 'danger')
+            return redirect(url_for('listar_clientes'))
+        
+        # Formata a mensagem
+        mensagem = f"Olá {cobranca['nome']},\n\n"
+        mensagem += f"Segue cobrança no valor de R$ {cobranca['valor']:.2f}"
+        if cobranca['descricao']:
+            mensagem += f" referente a: {cobranca['descricao']}\n\n"
+        mensagem += "Por favor, efetue o pagamento o mais breve possível.\n"
+        mensagem += "Agradecemos pela atenção!"
+        
+        # Remove caracteres não numéricos do telefone
+        telefone = ''.join(filter(str.isdigit, cobranca['telefone']))
+        
+        # Atualiza status da cobrança
+        db_commit(
+            "UPDATE cobrancas SET status = 'enviada' WHERE id = %s",
+            (cobranca_id,)
+        )
+        
+        # Redireciona para o WhatsApp
+        whatsapp_url = f"https://wa.me/{telefone}?text={mensagem}"
+        return redirect(whatsapp_url)
+        
+    except Exception as e:
+        flash(f'Erro ao enviar cobrança: {str(e)}', 'danger')
+        return redirect(url_for('listar_clientes'))
 
 if __name__ == '__main__':
     app.run(debug=os.getenv('FLASK_DEBUG', 'False') == 'True')
