@@ -327,9 +327,11 @@ def buscar_clientes():
         clientes = db_query("SELECT * FROM clientes ORDER BY nome")
     
     return render_template('_clientes_partial.html', clientes=clientes)
+
 @app.route('/agendar_cobranca/<int:cliente_id>', methods=['GET', 'POST'])
 @login_required
 def agendar_cobranca(cliente_id):
+    # Obter cliente
     cliente = db_query(
         "SELECT * FROM clientes WHERE id = %s",
         (cliente_id,),
@@ -339,14 +341,27 @@ def agendar_cobranca(cliente_id):
     if not cliente:
         flash('Cliente não encontrado!', 'danger')
         return redirect(url_for('listar_clientes'))
+
+    # Obter cobranças existentes
+    query = """
+        SELECT id, cliente_id, valor, 
+               descricao, 
+               data_agendamento,
+               DATE_FORMAT(data_agendamento, '%%d/%%m/%%Y %%H:%%i') as data_formatada,
+               status
+        FROM cobrancas 
+        WHERE cliente_id = %s
+        ORDER BY data_agendamento DESC
+    """
+    cobrancas = db_query(query, (cliente_id,))
     
+    # --- CÓDIGO DE PROCESSAMENTO DO FORMULÁRIO ---
     if request.method == 'POST':
         try:
             valor = request.form.get('valor', '').strip()
             descricao = request.form.get('descricao', '').strip()
             data_agendamento = request.form.get('data_agendamento', '').strip()
             
-            # Validações
             if not all([valor, data_agendamento]):
                 flash('Valor e data são obrigatórios!', 'danger')
                 return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
@@ -358,20 +373,23 @@ def agendar_cobranca(cliente_id):
                 flash('Formato inválido para valor ou data!', 'danger')
                 return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
             
-            # Insere no banco de dados
             db_commit(
                 "INSERT INTO cobrancas (cliente_id, valor, descricao, data_agendamento) VALUES (%s, %s, %s, %s)",
                 (cliente_id, valor_float, descricao, data_obj)
             )
             
             flash('Cobrança agendada com sucesso!', 'success')
-            return redirect(url_for('listar_clientes'))
+            return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
             
         except Exception as e:
             flash(f'Erro ao agendar cobrança: {str(e)}', 'danger')
             return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
+    # --- FIM DO CÓDIGO DE PROCESSAMENTO ---
     
-    return render_template('agendar_cobranca.html', cliente=cliente)
+    return render_template('agendar_cobranca.html', 
+                         cliente=cliente, 
+                         cobrancas=cobrancas)
+
 
 @app.route('/enviar_cobranca/<int:cobranca_id>')
 @login_required
@@ -411,6 +429,27 @@ def enviar_cobranca(cobranca_id):
     except Exception as e:
         flash(f'Erro ao enviar cobrança: {str(e)}', 'danger')
         return redirect(url_for('listar_clientes'))
+
+@app.route('/listar_cobrancas')
+@login_required
+def listar_cobrancas():
+    # Consulta revisada para garantir que cliente_id está incluído
+    query = """
+        SELECT c.id, c.valor, c.descricao, c.status,
+               DATE_FORMAT(c.data_agendamento, '%%d/%%m/%%Y %%H:%%i') as data_formatada,
+               cl.nome as cliente_nome, 
+               cl.id as cliente_id,  # Adicionado esta linha
+               cl.telefone
+        FROM cobrancas c
+        JOIN clientes cl ON c.cliente_id = cl.id
+        ORDER BY c.data_agendamento DESC
+    """
+    cobrancas = db_query(query)
+    
+    # Debug para verificar os dados
+    print("Cobranças encontradas:", cobrancas)
+    
+    return render_template('listar_cobrancas.html', cobrancas=cobrancas)
 
 if __name__ == '__main__':
     app.run(debug=os.getenv('FLASK_DEBUG', 'False') == 'True')

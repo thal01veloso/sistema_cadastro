@@ -603,3 +603,119 @@ a, button, input, .form-control {
       justify-content: center;
   }
 }
+
+/* Estilos para a tabela de cobranças */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.table th, .table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+.table th {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.table tr:nth-child(even) {
+  background-color: rgba(154, 122, 160, 0.05);
+}
+
+.table tr:hover {
+  background-color: rgba(154, 122, 160, 0.1);
+}
+
+/* Badges para status */
+.badge {
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+.bg-warning {
+  background-color: var(--warning-color);
+  color: #000;
+}
+
+.bg-success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.bg-secondary {
+  background-color: var(--gray-medium);
+  color: var(--dark-color);
+}
+
+/* Botões de ação na tabela */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.2rem;
+}
+
+/* Estado vazio */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--gray-medium);
+  border: 1px dashed var(--gray-light);
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.empty-state i {
+  margin-bottom: 1rem;
+  color: var(--gray-medium);
+}
+/* Estilos para a tabela de cobranças */
+.table-cobrancas {
+  font-size: 0.9rem;
+}
+
+.table-cobrancas th {
+  background-color: #9a7aa0;
+  color: white;
+  font-weight: 500;
+}
+
+.table-cobrancas tr:hover {
+  background-color: rgba(154, 122, 160, 0.05);
+}
+
+/* Badges de status */
+.badge-pendente {
+  background-color: #ebcb8b;
+  color: #000;
+}
+
+.badge-enviada {
+  background-color: #a3be8c;
+  color: #fff;
+}
+
+.badge-cancelada {
+  background-color: #d08770;
+  color: #fff;
+}
+
+/* Botões de ação */
+.btn-cobranca {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  margin: 0 2px;
+}

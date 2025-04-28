@@ -2,26 +2,76 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Agendar Cobrança para {{ cliente.nome }}</h2>
-    
-    <form method="POST">
-        <div class="mb-3">
-            <label for="valor" class="form-label">Valor</label>
-            <input type="number" step="0.01" class="form-control" id="valor" name="valor" required>
+    <div class="card">
+        <div class="card-header">
+            <h2>Agendar Cobrança para {{ cliente.nome }}</h2>
         </div>
         
-        <div class="mb-3">
-            <label for="descricao" class="form-label">Descrição (opcional)</label>
-            <textarea class="form-control" id="descricao" name="descricao" rows="2"></textarea>
+        <div class="card-body">
+            <!-- Formulário de agendamento -->
+            <form method="POST">
+                <div class="form-group">
+                    <label for="valor">Valor</label>
+                    <input type="number" step="0.01" class="form-control" id="valor" name="valor" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="descricao">Descrição (opcional)</label>
+                    <textarea class="form-control" id="descricao" name="descricao" rows="2"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="data_agendamento">Data e Hora</label>
+                    <input type="datetime-local" class="form-control" id="data_agendamento" name="data_agendamento" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-calendar-plus"></i> Agendar Cobrança
+                </button>
+            </form>
+            
+            <!-- Lista de cobranças agendadas -->
+            <div class="mt-5">
+                <h3>Cobranças Agendadas</h3>
+                
+                {% if cobrancas %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Valor</th>
+                                    <th>Descrição</th>
+                                    <th>Data Agendada</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cobranca in cobrancas %}
+                                <tr>
+                                    <td>R$ {{ "%.2f"|format(cobranca.valor) }}</td>
+                                    <td>{{ cobranca.descricao or '-' }}</td>
+                                    <td>{{ cobranca.data_formatada }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if cobranca.status == 'pendente' %}bg-warning
+                                            {% elif cobranca.status == 'enviada' %}bg-success
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ cobranca.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                        <p>Nenhuma cobrança agendada para este cliente.</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
-        
-        <div class="mb-3">
-            <label for="data_agendamento" class="form-label">Data e Hora</label>
-            <input type="datetime-local" class="form-control" id="data_agendamento" name="data_agendamento" required>
-        </div>
-        
-        <button type="submit" class="btn btn-primary">Agendar Cobrança</button>
-        <a href="{{ url_for('listar_clientes') }}" class="btn btn-secondary">Cancelar</a>
-    </form>
+    </div>
 </div>
 {% endblock %}
