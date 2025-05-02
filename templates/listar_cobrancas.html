@@ -45,17 +45,19 @@
                                     {% if cobranca.status == 'pendente' %}
                                     <a href="{{ url_for('enviar_cobranca', cobranca_id=cobranca.id) }}" 
                                        class="btn btn-sm btn-success"
-                                       title="Enviar agora">
-                                        <i class="fas fa-paper-plane"></i>
+                                       title="Enviar pelo WhatsApp"
+                                       onclick="return confirm('Enviar cobrança para {{ cobranca.cliente_nome }}?')">
+                                        <i class="fab fa-whatsapp"></i> Enviar
                                     </a>
+                                    {% else %}
+                                    <span class="text-muted">
+                                        {% if cobranca.data_envio %}
+                                        Enviada em {{ cobranca.data_envio }}
+                                    {% else %}
+                                        Envio sem data registrada
                                     {% endif %}
-                                    <!-- Verifique se cliente_id existe antes de usar -->
-                                    {% if cobranca.cliente_id %}
-                                    <a href="{{ url_for('agendar_cobranca', cliente_id=cobranca.cliente_id) }}" 
-                                       class="btn btn-sm btn-primary"
-                                       title="Ver detalhes">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+
+                                    </span>
                                     {% endif %}
                                 </td>
                             </tr>

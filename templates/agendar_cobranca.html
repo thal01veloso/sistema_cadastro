@@ -59,6 +59,25 @@
                                             {{ cobranca.status }}
                                         </span>
                                     </td>
+                                    <td>
+                                        {% if cobranca.status == 'pendente' %}
+                                        <a href="{{ url_for('enviar_cobranca', cobranca_id=cobranca.id) }}" 
+                                           class="btn btn-sm btn-success"
+                                           title="Enviar pelo WhatsApp"
+                                           onclick="return confirm('Enviar cobrança para {{ cobranca.cliente_nome }}?')">
+                                            <i class="fab fa-whatsapp"></i> Enviar
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">
+                                            {% if cobranca.data_envio %}
+                                            Enviada em {{ cobranca.data_envio }}
+                                        {% else %}
+                                            Envio sem data registrada
+                                        {% endif %}
+    
+                                        </span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
