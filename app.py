@@ -81,7 +81,7 @@ def login():
         password = request.form.get('password', '')
 
         user = db_query(
-            "SELECT * FROM usuarios WHERE username = %s", 
+            "SELECT id, username, password, nome FROM usuarios WHERE username = %s", 
             (username,), 
             fetchone=True
         )
@@ -89,6 +89,7 @@ def login():
         if user and check_password_hash(user['password'], password):
             session.update({
                 'logged_in': True,
+                'user_id': user['id'],  # Garanta que isso está sendo salvo
                 'username': user['username'],
                 'nome': user['nome']
             })
@@ -164,7 +165,7 @@ def index():
 def cadastrar_clientes():
     if request.method == 'POST':
         try:
-            # Processar upload da foto
+            # Processar upload da foto (mantido igual)
             foto = None
             if 'foto' in request.files:
                 file = request.files['foto']
@@ -173,16 +174,18 @@ def cadastrar_clientes():
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     foto = filename
 
+            # Adiciona o ID do usuário logado
             db_commit(
-                "INSERT INTO clientes (nome, email, telefone, foto) VALUES (%s, %s, %s, %s)",
-                (request.form['nome'], request.form['email'], request.form['telefone'], foto)
+                "INSERT INTO clientes (nome, email, telefone, foto, usuario_id) VALUES (%s, %s, %s, %s, %s)",
+                (request.form['nome'], request.form['email'], request.form['telefone'], foto, session['user_id'])
             )
             flash('Cliente cadastrado com sucesso!', 'success')
             return redirect(url_for('listar_clientes'))
+            
         except Exception as e:
             flash(f'Erro ao cadastrar cliente: {str(e)}', 'danger')
             return redirect(url_for('cadastrar_clientes'))
-
+    
     return render_template('cadastrar.html')
 
 @app.route('/uploads/<filename>')
@@ -196,8 +199,12 @@ def uploaded_file(filename):
 @app.route('/listar_clientes')
 @login_required
 def listar_clientes():
-    clientes = db_query("SELECT * FROM clientes order by nome asc")
+    clientes = db_query(
+        "SELECT * FROM clientes WHERE usuario_id = %s ORDER BY nome ASC",
+        (session['user_id'],)
+    )
     return render_template('listar.html', clientes=clientes)
+   
 
 # Error handlers
 @app.errorhandler(404)
@@ -224,15 +231,15 @@ def excluir_cliente(id):
     try:
         # Primeiro obtém o nome do arquivo da foto se existir
         cliente = db_query(
-            "SELECT foto FROM clientes WHERE id = %s",
-            (id,),
+            "SELECT foto FROM clientes WHERE id = %s AND usuario_id = %s",
+            (id, session['user_id']),
             fetchone=True
         )
         
         # Exclui o cliente do banco de dados
         db_commit(
-            "DELETE FROM clientes WHERE id = %s",
-            (id,)
+            "DELETE FROM clientes WHERE id = %s AND usuario_id = %s",
+            (id,session['user_id'])
         )
         
         # Se existia uma foto, exclui do sistema de arquivos
@@ -255,10 +262,10 @@ def editar_cliente(id):
     if request.method == 'GET':
         # Busca os dados atuais do cliente
         cliente = db_query(
-            "SELECT * FROM clientes WHERE id = %s",
-            (id,),
-            fetchone=True
-        )
+        "SELECT * FROM clientes WHERE id = %s AND usuario_id = %s",
+        (id, session['user_id']),
+        fetchone=True
+    )
         if not cliente:
             flash('Cliente não encontrado!', 'danger')
             return redirect(url_for('listar_clientes'))
@@ -320,15 +327,18 @@ def buscar_clientes():
     
     if nome:
         clientes = db_query(
-            "SELECT * FROM clientes WHERE nome LIKE %s ORDER BY nome",
-            (f"%{nome}%",)
+            "SELECT * FROM clientes WHERE nome LIKE %s AND usuario_id = %s ORDER BY nome",
+            (f"%{nome}%", session['user_id'])
         )
     else:
-        clientes = db_query("SELECT * FROM clientes ORDER BY nome")
+        clientes = db_query(
+            "SELECT * FROM clientes WHERE usuario_id = %s ORDER BY nome",
+            (session['user_id'],)
+        )
     
     return render_template('_clientes_partial.html', clientes=clientes)
-
-@app.route('/agendar_cobranca/<int:cliente_id>', methods=['GET', 'POST'])
+    
+@app.route('/agendar_cobranca/<int:cliente_id>')
 @login_required
 def agendar_cobranca(cliente_id):
     # Obter cliente
@@ -463,24 +473,23 @@ def enviar_cobranca(cobranca_id):
         flash(f'Erro ao enviar cobrança: {str(e)}', 'danger')
         return redirect(url_for('listar_cobrancas'))
 
-        
+
 @app.route('/listar_cobrancas')
 @login_required
 def listar_cobrancas():
-    # Consulta revisada para garantir que cliente_id está incluído
+    # Filtra cobranças apenas dos clientes do usuário
     query = """
         SELECT c.id, c.valor, c.descricao, c.status,
                DATE_FORMAT(c.data_agendamento, '%%d/%%m/%%Y %%H:%%i') as data_formatada,
                cl.nome as cliente_nome, 
-               cl.id as cliente_id,  # Adicionado esta linha
+               cl.id as cliente_id,
                cl.telefone
         FROM cobrancas c
         JOIN clientes cl ON c.cliente_id = cl.id
+        WHERE cl.usuario_id = %s
         ORDER BY c.data_agendamento DESC
     """
-    cobrancas = db_query(query)
-    
-    # Debug para verificar os dados
+    cobrancas = db_query(query, (session['user_id'],))
     return render_template('listar_cobrancas.html', cobrancas=cobrancas)
 
 if __name__ == '__main__':
