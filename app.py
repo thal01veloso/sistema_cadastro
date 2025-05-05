@@ -338,40 +338,39 @@ def buscar_clientes():
     
     return render_template('_clientes_partial.html', clientes=clientes)
     
-@app.route('/agendar_cobranca/<int:cliente_id>')
+@app.route('/agendar_cobranca/<int:cliente_id>', methods=['GET', 'POST'])  # Adicione POST aqui
 @login_required
 def agendar_cobranca(cliente_id):
-    # Obter cliente
+    # Verificar se o cliente pertence ao usuário logado
     cliente = db_query(
-        "SELECT * FROM clientes WHERE id = %s",
-        (cliente_id,),
+        "SELECT * FROM clientes WHERE id = %s AND usuario_id = %s",
+        (cliente_id, session['user_id']),
         fetchone=True
     )
     
     if not cliente:
-        flash('Cliente não encontrado!', 'danger')
+        flash('Cliente não encontrado ou permissão negada!', 'danger')
         return redirect(url_for('listar_clientes'))
-
-    # Obter cobranças existentes
-    query = """
-        SELECT id, cliente_id, valor, 
-               descricao, 
-               data_agendamento,
-               DATE_FORMAT(data_agendamento, '%%d/%%m/%%Y %%H:%%i') as data_formatada,
-               status
-        FROM cobrancas 
-        WHERE cliente_id = %s
-        ORDER BY data_agendamento DESC
-    """
-    cobrancas = db_query(query, (cliente_id,))
     
-    # --- CÓDIGO DE PROCESSAMENTO DO FORMULÁRIO ---
+    # Obter cobranças existentes
+    cobrancas = db_query(
+        """SELECT id, valor, descricao, status, 
+           DATE_FORMAT(data_agendamento, '%%d/%%m/%%Y %%H:%%i') as data_formatada,
+           data_envio
+           FROM cobrancas 
+           WHERE cliente_id = %s
+           ORDER BY data_agendamento DESC""",
+        (cliente_id,)
+    )
+    
+    # Processar formulário POST
     if request.method == 'POST':
         try:
             valor = request.form.get('valor', '').strip()
             descricao = request.form.get('descricao', '').strip()
             data_agendamento = request.form.get('data_agendamento', '').strip()
             
+            # Validações
             if not all([valor, data_agendamento]):
                 flash('Valor e data são obrigatórios!', 'danger')
                 return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
@@ -383,9 +382,12 @@ def agendar_cobranca(cliente_id):
                 flash('Formato inválido para valor ou data!', 'danger')
                 return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
             
+            # Inserir no banco de dados
             db_commit(
-                "INSERT INTO cobrancas (cliente_id, valor, descricao, data_agendamento) VALUES (%s, %s, %s, %s)",
-                (cliente_id, valor_float, descricao, data_obj)
+                """INSERT INTO cobrancas 
+                   (cliente_id, valor, descricao, data_agendamento, usuario_id) 
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (cliente_id, valor_float, descricao, data_obj, session['user_id'])
             )
             
             flash('Cobrança agendada com sucesso!', 'success')
@@ -394,12 +396,10 @@ def agendar_cobranca(cliente_id):
         except Exception as e:
             flash(f'Erro ao agendar cobrança: {str(e)}', 'danger')
             return redirect(url_for('agendar_cobranca', cliente_id=cliente_id))
-    # --- FIM DO CÓDIGO DE PROCESSAMENTO ---
     
     return render_template('agendar_cobranca.html', 
                          cliente=cliente, 
                          cobrancas=cobrancas)
-
 
 @app.route('/enviar_cobranca/<int:cobranca_id>')
 @login_required
