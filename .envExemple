@@ -1,0 +1,11 @@
+# Chave secreta para sessões Flask (gere uma string aleatória e mantenha em segredo)
+SECRET_KEY = "xxx"
+
+# Configurações do banco de dados MySQL
+MYSQL_HOST = "xxxx"
+MYSQL_USER = "xxx"
+MYSQL_PASSWORD = "xxxxx"
+MYSQL_DB = "xxxxxx"
+
+# Opcional: ativar modo debug (True/False)
+FLASK_DEBUG = "True"

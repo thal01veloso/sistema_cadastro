@@ -1,0 +1,51 @@
+-- Criação do banco de dados (opcional, se ainda não existir)
+CREATE DATABASE IF NOT EXISTS sistema_cobrancas
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE sistema_cobrancas;
+
+-- Tabela de usuários
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,  -- hash da senha
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabela de clientes
+CREATE TABLE IF NOT EXISTS clientes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    telefone VARCHAR(20),
+    foto VARCHAR(255),                -- nome do arquivo da foto
+    usuario_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Índice para agilizar buscas por usuário
+CREATE INDEX idx_clientes_usuario ON clientes(usuario_id);
+
+-- Tabela de cobranças agendadas
+CREATE TABLE IF NOT EXISTS cobrancas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT NOT NULL,
+    valor DECIMAL(10,2) NOT NULL,
+    descricao TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'pendente',  -- 'pendente', 'enviada', etc.
+    data_agendamento DATETIME NOT NULL,
+    data_envio DATETIME NULL,
+    usuario_id INT NOT NULL,           -- redundância para facilitar consultas
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Índices para consultas comuns
+CREATE INDEX idx_cobrancas_cliente ON cobrancas(cliente_id);
+CREATE INDEX idx_cobrancas_usuario ON cobrancas(usuario_id);
+CREATE INDEX idx_cobrancas_status ON cobrancas(status);
+CREATE INDEX idx_cobrancas_data_agendamento ON cobrancas(data_agendamento);
