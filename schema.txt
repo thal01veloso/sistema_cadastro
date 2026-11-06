@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome VARCHAR(100) NOT NULL,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,  -- hash da senha
+    chave_pix VARCHAR(150) NULL,
+    template_whatsapp TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -35,7 +37,7 @@ CREATE TABLE IF NOT EXISTS cobrancas (
     cliente_id INT NOT NULL,
     valor DECIMAL(10,2) NOT NULL,
     descricao TEXT,
-    status VARCHAR(20) NOT NULL DEFAULT 'pendente',  -- 'pendente', 'enviada', etc.
+    status ENUM('pendente', 'enviada', 'paga', 'cancelada') NOT NULL DEFAULT 'pendente',
     data_agendamento DATETIME NOT NULL,
     data_envio DATETIME NULL,
     usuario_id INT NOT NULL,           -- redundância para facilitar consultas

@@ -3,76 +3,119 @@
 {% block title %}Todas as Cobranças Agendadas{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h2>Todas as Cobranças Agendadas</h2>
-            <a href="{{ url_for('listar_clientes') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Voltar para Clientes
+<div class="card">
+    <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 class="card-title" style="margin-bottom: 0;">Todas as Cobranças Agendadas</h2>
+        <div class="dashboard-actions">
+            <a href="{{ url_for('exportar_cobrancas_csv') }}" class="btn btn-secondary">
+                <i class="fas fa-file-csv"></i> Exportar CSV
+            </a>
+            <a href="{{ url_for('listar_clientes') }}" class="btn">
+                <i class="fas fa-users"></i> Clientes
             </a>
         </div>
-        
-        <div class="card-body">
-            {% if cobrancas %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Cliente</th>
-                                <th>Valor</th>
-                                <th>Descrição</th>
-                                <th>Data Agendada</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for cobranca in cobrancas %}
-                            <tr>
-                                <td>{{ cobranca.cliente_nome }}</td>
-                                <td>R$ {{ "%.2f"|format(cobranca.valor) }}</td>
-                                <td>{{ cobranca.descricao or '-' }}</td>
-                                <td>{{ cobranca.data_formatada }}</td>
-                                <td>
-                                    <span class="badge 
-                                        {% if cobranca.status == 'pendente' %}bg-warning
-                                        {% elif cobranca.status == 'enviada' %}bg-success
-                                        {% else %}bg-secondary{% endif %}">
-                                        {{ cobranca.status }}
-                                    </span>
-                                </td>
-                                <td>
-                                    {% if cobranca.status == 'pendente' %}
-                                    <a href="{{ url_for('enviar_cobranca', cobranca_id=cobranca.id) }}" 
-                                       class="btn btn-sm btn-success"
-                                       title="Enviar pelo WhatsApp"
-                                       onclick="return confirm('Enviar cobrança para {{ cobranca.cliente_nome }}?')">
-                                        <i class="fab fa-whatsapp"></i> Enviar
-                                    </a>
-                                    {% else %}
-                                    <span class="text-muted">
-                                        {% if cobranca.data_envio %}
-                                        Enviada em {{ cobranca.data_envio }}
-                                    {% else %}
-                                        Envio sem data registrada
-                                    {% endif %}
+    </div>
 
-                                    </span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="empty-state text-center py-5">
-                    <i class="fas fa-calendar-times fa-4x text-muted mb-4"></i>
-                    <h4>Nenhuma cobrança agendada</h4>
-                    <p class="text-muted">Você ainda não possui cobranças agendadas.</p>
-                </div>
+    <!-- Barra de Filtros -->
+    <form method="GET" action="{{ url_for('listar_cobrancas') }}" class="filter-bar">
+        <div class="filter-group">
+            <input type="text" name="cliente" class="form-control" placeholder="Filtrar por nome do cliente..." value="{{ busca_cliente or '' }}">
+        </div>
+        <div class="filter-group">
+            <select name="status" class="form-control">
+                <option value="">Todos os status</option>
+                <option value="pendente" {% if status_filtro == 'pendente' %}selected{% endif %}>Pendente</option>
+                <option value="enviada" {% if status_filtro == 'enviada' %}selected{% endif %}>Enviada</option>
+                <option value="paga" {% if status_filtro == 'paga' %}selected{% endif %}>Paga</option>
+                <option value="cancelada" {% if status_filtro == 'cancelada' %}selected{% endif %}>Cancelada</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn" style="padding: 0.65rem 1.2rem;">
+                <i class="fas fa-filter"></i> Filtrar
+            </button>
+            {% if status_filtro or busca_cliente %}
+            <a href="{{ url_for('listar_cobrancas') }}" class="btn btn-secondary" style="padding: 0.65rem 1rem;">
+                Limpar
+            </a>
             {% endif %}
         </div>
-    </div>
+    </form>
+    
+    {% if cobrancas %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Valor</th>
+                        <th>Descrição</th>
+                        <th>Data Agendada</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cobranca in cobrancas %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('detalhes_cliente', id=cobranca.cliente_id) }}" style="color: var(--dark-color); font-weight: 600; text-decoration: none;">
+                                {{ cobranca.cliente_nome }}
+                            </a>
+                        </td>
+                        <td>R$ {{ "%.2f"|format(cobranca.valor) }}</td>
+                        <td>{{ cobranca.descricao or '-' }}</td>
+                        <td>{{ cobranca.data_formatada }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if cobranca.status == 'pendente' %}bg-warning
+                                {% elif cobranca.status in ['enviada', 'paga'] %}bg-success
+                                {% elif cobranca.status == 'cancelada' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ cobranca.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                {% if cobranca.status in ['pendente', 'enviada'] %}
+                                <form action="{{ url_for('enviar_cobranca', cobranca_id=cobranca.id) }}" method="POST" class="delete-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit"
+                                            class="btn-whatsapp btn-sm"
+                                            title="Enviar pelo WhatsApp"
+                                            onclick="return confirm('Enviar cobrança para {{ cobranca.cliente_nome }}?')">
+                                        <i class="fab fa-whatsapp"></i> {% if cobranca.status == 'pendente' %}Enviar{% else %}Reenviar{% endif %}
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% if cobranca.status != 'paga' %}
+                                <form action="{{ url_for('alterar_status_cobranca', cobranca_id=cobranca.id) }}" method="POST" class="delete-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="status" value="paga">
+                                    <button type="submit" class="btn-action btn-sm" style="background: var(--success-color); color: #fff;" title="Marcar como Paga">
+                                        <i class="fas fa-check"></i> Paga
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <form action="{{ url_for('excluir_cobranca', cobranca_id=cobranca.id) }}" method="POST" class="delete-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-action btn-delete btn-sm" onclick="return confirm('Deseja excluir esta cobrança?')" title="Excluir">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-times fa-3x"></i>
+            <h4>Nenhuma cobrança encontrada</h4>
+            <p class="text-muted">Não há cobranças para os filtros selecionados.</p>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

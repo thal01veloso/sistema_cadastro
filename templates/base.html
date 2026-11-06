@@ -7,139 +7,233 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<script>
-    // Preview de imagem antes do upload
-    document.addEventListener('DOMContentLoaded', function() {
-        const fotoInput = document.getElementById('foto');
-        if (fotoInput) {
-            fotoInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        let preview = document.getElementById('image-preview');
-                        if (!preview) {
-                            preview = document.createElement('img');
-                            preview.id = 'image-preview';
-                            preview.className = 'image-preview';
-                            fotoInput.parentNode.appendChild(preview);
-                        }
-                        preview.src = event.target.result;
-                        preview.style.display = 'block';
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-    });
-    // Confirmação antes de excluir
-    document.querySelectorAll('.delete-form').forEach(form => {
-    form.addEventListener('submit', (e) => {
-        if (!confirm('Tem certeza que deseja excluir este cliente permanentemente?')) {
-            e.preventDefault();
-        }
-    });
-});
-</script>
 <body>
-    <header>
-        <div class="container header-content">
-            <div class="logo">ClientSys</div>
-            <nav>
+    <div class="{% if 'logged_in' in session %}app-layout{% endif %}">
+        {% if 'logged_in' in session %}
+        <!-- Botão Mobile para abrir/fechar menu lateral -->
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Menu Lateral (Sidebar) -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="{{ url_for('dashboard') }}" class="logo">
+                    <i class="fas fa-address-book"></i>
+                    <span>ClientSys</span>
+                </a>
+            </div>
+
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-label">Bem-vindo(a),</span>
+                    <strong class="user-name">{{ session['nome'] }}</strong>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
                 <ul>
-                    {% if 'logged_in' in session %}
-                    <li class="user-info">
-                        <i class="fas fa-user-circle"></i>
-                        <span>{{ session['nome'] }}</span>
+                    <li>
+                        <a href="{{ url_for('dashboard') }}" class="{% if request.path == '/dashboard' %}active{% endif %}">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Dashboard</span>
+                        </a>
                     </li>
-                    <li><a href="{{ url_for('listar_cobrancas') }}"><i class="fas fa-calendar-alt"></i> Cobr
-                    <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-                    {% else %}
-                    <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
-                    <li><a href="{{ url_for('registrar') }}"><i class="fas fa-user-plus"></i> Registrar</a></li>
-                    {% endif %}
+                    <li>
+                        <a href="{{ url_for('listar_clientes') }}" class="{% if request.path.startswith('/listar_clientes') or request.path.startswith('/editar_cliente') or request.path.startswith('/cliente/') %}active{% endif %}">
+                            <i class="fas fa-users"></i>
+                            <span>Clientes</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('cadastrar_clientes') }}" class="{% if request.path.startswith('/cadastrar_clientes') %}active{% endif %}">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Novo Cliente</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('listar_cobrancas') }}" class="{% if request.path.startswith('/listar_cobrancas') or request.path.startswith('/agendar_cobranca') %}active{% endif %}">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Cobranças</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('perfil') }}" class="{% if request.path.startswith('/perfil') %}active{% endif %}">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Meu Perfil</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
-        </div>
-    </header>
 
-    <main class="main-content">
-        <div class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair</span>
+                </a>
+            </div>
+        </aside>
+        {% else %}
+        <!-- Cabeçalho superior apenas para telas públicas (Login/Registro) -->
+        <header>
+            <div class="container header-content">
+                <div class="logo">ClientSys</div>
+                <nav>
+                    <ul>
+                        <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                        <li><a href="{{ url_for('registrar') }}"><i class="fas fa-user-plus"></i> Registrar</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        {% endif %}
 
-            {% block content %}{% endblock %}
-        </div>
-    </main>
+        <!-- Área Principal -->
+        <div class="{% if 'logged_in' in session %}app-main{% endif %}">
+            <main class="main-content">
+                <div class="container">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 Sistema de Clientes. Todos os direitos reservados.</p>
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+
+            <footer>
+                <div class="container">
+                    <p>&copy; 2025 Sistema de Clientes. Todos os direitos reservados.</p>
+                </div>
+            </footer>
         </div>
-    </footer>
-</body>
-<!-- Adicione isso antes do </body> -->
-<script>
-    // Função para esconder mensagens flash após 2 segundos
-    document.addEventListener('DOMContentLoaded', function() {
-        const alerts = document.querySelectorAll('.alert');
-        
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                alert.style.transition = 'opacity 0.5s ease';
-                alert.style.opacity = '0';
-                
-                // Remove completamente o elemento após a animação
-                setTimeout(() => {
-                    alert.remove();
-                }, 500);
-            }, 2000); // 2000ms = 2 segundos
-        });
-    });
-    </script>
-<script>
-    // Preview da nova imagem antes de enviar o formulário
-    document.getElementById('foto')?.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                let preview = document.querySelector('.client-photo-preview');
-                if (!preview) {
-                    const container = document.querySelector('.current-photo');
-                    if (container) {
-                        preview = document.createElement('img');
-                        preview.className = 'client-photo-preview';
-                        container.insertBefore(preview, container.firstChild);
-                    }
-                }
-                if (preview) {
-                    preview.src = event.target.result;
-                }
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-    </script>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const csrfToken = "{{ csrf_token() }}";
+
+            // Injeta token CSRF automaticamente em todos os formulários POST (incluindo buscas dinâmicas)
+            function injectCsrfTokens(root = document) {
+                root.querySelectorAll('form').forEach(form => {
+                    if ((form.method || 'GET').toUpperCase() === 'POST' && !form.querySelector('input[name="csrf_token"]')) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'csrf_token';
+                        input.value = csrfToken;
+                        form.appendChild(input);
+                    }
+                });
+            }
+            injectCsrfTokens();
+
+            // Observa atualizações dinâmicas (ex: busca AJAX de clientes) para injetar CSRF
+            const observer = new MutationObserver(mutations => {
+                mutations.forEach(m => {
+                    m.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) injectCsrfTokens(node);
+                    });
+                });
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            // Controle do menu lateral no mobile
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            if (sidebarToggle && sidebar && sidebarOverlay) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('active');
+                });
+
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+
+            // Preview de imagem antes do upload
+            const fotoInput = document.getElementById('foto');
+            if (fotoInput) {
+                fotoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            let preview = document.querySelector('.client-photo-preview') || document.getElementById('image-preview');
+                            if (!preview) {
+                                const container = document.querySelector('.current-photo');
+                                if (container) {
+                                    preview = document.createElement('img');
+                                    preview.className = 'client-photo-preview';
+                                    container.insertBefore(preview, container.firstChild);
+                                } else {
+                                    preview = document.createElement('img');
+                                    preview.id = 'image-preview';
+                                    preview.className = 'image-preview';
+                                    fotoInput.parentNode.appendChild(preview);
+                                }
+                            }
+                            if (preview) {
+                                preview.src = event.target.result;
+                                preview.style.display = 'block';
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Função para esconder mensagens flash após 4 segundos
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 500);
+                }, 4000);
+            });
+
+            // Máscara automática para campos de telefone
+            document.querySelectorAll('.phone-mask, input[name="telefone"]').forEach(input => {
+                input.addEventListener('input', function(e) {
+                    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    if (v.length > 10) {
+                        v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+                    } else if (v.length > 5) {
+                        v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+                    } else if (v.length > 2) {
+                        v = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+                    } else if (v.length > 0) {
+                        v = v.replace(/^(\d*)/, '($1');
+                    }
+                    e.target.value = v;
+                });
+            });
+
             // Trata links do WhatsApp
             document.querySelectorAll('a[href*="wa.me"]').forEach(link => {
                 link.addEventListener('click', function(e) {
                     const newWindow = window.open(this.href, '_blank');
                     if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
                         alert('Não foi possível abrir o WhatsApp. Verifique se o aplicativo está instalado.');
-                        window.location.href = this.href; // Tenta abrir na mesma janela
+                        window.location.href = this.href;
                     }
                 });
             });
         });
-        </script>
+    </script>
+</body>
 </html>

@@ -1,26 +1,33 @@
 {% extends "base.html" %}
+
+{% block title %}Cadastrar Novo Cliente{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Cadastrar Novo Cliente</h2>
+<div class="card">
+    <h2 class="card-title">Cadastrar Novo Cliente</h2>
     <form method="POST" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="nome" class="form-label">Nome</label>
-            <input type="text" class="form-control" id="nome" name="nome" required>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="nome"><i class="fas fa-user"></i> Nome</label>
+            <input type="text" class="form-control" id="nome" name="nome" required placeholder="Nome completo do cliente">
         </div>
-        <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" required>
+        <div class="form-group">
+            <label for="email"><i class="fas fa-envelope"></i> Email</label>
+            <input type="email" class="form-control" id="email" name="email" required placeholder="exemplo@email.com">
         </div>
-        <div class="mb-3">
-            <label for="telefone" class="form-label">Telefone</label>
-            <input type="text" class="form-control" id="telefone" name="telefone">
+        <div class="form-group">
+            <label for="telefone"><i class="fas fa-phone"></i> Telefone / WhatsApp</label>
+            <input type="text" class="form-control phone-mask" id="telefone" name="telefone" placeholder="(11) 99999-9999">
         </div>
-        <div class="mb-3">
-            <label for="foto" class="form-label">Foto do Cliente</label>
+        <div class="form-group">
+            <label for="foto"><i class="fas fa-camera"></i> Foto do Cliente</label>
             <input type="file" class="form-control" id="foto" name="foto" accept="image/*">
             <small class="text-muted">Formatos aceitos: JPG, PNG, GIF (Máx. 2MB)</small>
         </div>
-        <button type="submit" class="btn btn-primary">Cadastrar</button>
+        <div class="form-group mt-4">
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Cadastrar</button>
+            <a href="{{ url_for('listar_clientes') }}" class="btn btn-secondary ml-2">Cancelar</a>
+        </div>
     </form>
 </div>
 {% endblock %}

@@ -6,6 +6,7 @@
 <div class="card">
     <h2 class="card-title">Acesse sua conta</h2>
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
             <label for="username"><i class="fas fa-user"></i> Nome de usuário</label>
             <input type="text" id="username" name="username" class="form-control" required>

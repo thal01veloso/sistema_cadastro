@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h2 class="dashboard-title"><i class="fas fa-chart-pie"></i> Dashboard Geral</h2>
+        <p class="dashboard-subtitle">Visão geral da sua carteira de clientes e cobranças agendadas</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('cadastrar_clientes') }}" class="btn">
+            <i class="fas fa-user-plus"></i> Novo Cliente
+        </a>
+        <a href="{{ url_for('listar_cobrancas') }}" class="btn btn-secondary">
+            <i class="fas fa-calendar-alt"></i> Ver Cobranças
+        </a>
+    </div>
+</div>
+
+<!-- Cards de KPIs Principais -->
+<div class="kpi-grid">
+    <!-- Total de Clientes -->
+    <div class="kpi-card kpi-primary">
+        <div class="kpi-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total de Clientes</span>
+            <h3 class="kpi-value">{{ kpis.total_clientes }}</h3>
+            <span class="kpi-meta">
+                <i class="fab fa-whatsapp"></i> {{ kpis.clientes_com_telefone }} com WhatsApp cadastrado
+            </span>
+        </div>
+    </div>
+
+    <!-- Valor Pendente a Receber -->
+    <div class="kpi-card kpi-warning">
+        <div class="kpi-icon">
+            <i class="fas fa-hourglass-half"></i>
+        </div>
+        <div class="kpi-info">
+            <span class="kpi-label">Pendente a Enviar/Receber</span>
+            <h3 class="kpi-value">R$ {{ "%.2f"|format(kpis.valor_pendente) }}</h3>
+            <span class="kpi-meta">
+                {{ kpis.qtd_pendentes }} cobrança(s) pendente(s)
+            </span>
+        </div>
+    </div>
+
+    <!-- Cobranças Enviadas -->
+    <div class="kpi-card kpi-success">
+        <div class="kpi-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total já Cobrado (Enviadas)</span>
+            <h3 class="kpi-value">R$ {{ "%.2f"|format(kpis.valor_enviado) }}</h3>
+            <span class="kpi-meta">
+                {{ kpis.qtd_enviadas }} enviada(s) ({{ kpis.taxa_envio }}% do total)
+            </span>
+        </div>
+    </div>
+
+    <!-- Cobranças em Atraso / Hoje -->
+    <div class="kpi-card {% if kpis.qtd_atrasadas > 0 %}kpi-danger{% else %}kpi-info{% endif %}">
+        <div class="kpi-icon">
+            <i class="fas {% if kpis.qtd_atrasadas > 0 %}fa-exclamation-triangle{% else %}fa-calendar-day{% endif %}"></i>
+        </div>
+        <div class="kpi-info">
+            <span class="kpi-label">Pendentes Vencidas / Atrasadas</span>
+            <h3 class="kpi-value">R$ {{ "%.2f"|format(kpis.valor_atrasado) }}</h3>
+            <span class="kpi-meta">
+                {{ kpis.qtd_atrasadas }} vencida(s) &bull; {{ kpis.qtd_hoje }} agendada(s) para hoje
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Barra de Progresso de Envios e Resumo Financeiro -->
+<div class="card dashboard-summary-card">
+    <div class="summary-header">
+        <div>
+            <h3 class="card-title" style="margin-bottom: 0.25rem;">Taxa de Disparo de Cobranças</h3>
+            <p class="text-muted">Proporção de cobranças agendadas que já foram enviadas pelo WhatsApp</p>
+        </div>
+        <div class="summary-total">
+            <span class="summary-total-label">Volume Total Movimentado</span>
+            <strong class="summary-total-value">R$ {{ "%.2f"|format(kpis.valor_total) }}</strong>
+        </div>
+    </div>
+    <div class="progress-bar-container">
+        <div class="progress-bar-fill" style="width: {{ kpis.taxa_envio }}%;"></div>
+    </div>
+    <div class="summary-stats">
+        <span><i class="fas fa-circle" style="color: var(--success-color);"></i> Enviadas: <strong>{{ kpis.qtd_enviadas }}</strong> (R$ {{ "%.2f"|format(kpis.valor_enviado) }})</span>
+        <span><i class="fas fa-circle" style="color: var(--warning-color);"></i> Pendentes: <strong>{{ kpis.qtd_pendentes }}</strong> (R$ {{ "%.2f"|format(kpis.valor_pendente) }})</span>
+        <span><strong>{{ kpis.taxa_envio }}%</strong> concluído</span>
+    </div>
+</div>
+
+<!-- Painéis Inferiores: Próximas Cobranças e Top Clientes -->
+<div class="dashboard-panels">
+    <!-- Próximas Cobranças Pendentes -->
+    <div class="card dashboard-panel">
+        <div class="panel-header">
+            <h3 class="card-title"><i class="fas fa-bell"></i> Próximas Cobranças Pendentes</h3>
+            <a href="{{ url_for('listar_cobrancas') }}" class="panel-link">Ver todas &rarr;</a>
+        </div>
+
+        {% if proximas_cobrancas %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Valor</th>
+                        <th>Agendamento</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cob in proximas_cobrancas %}
+                    <tr>
+                        <td>
+                            <strong>{{ cob.cliente_nome }}</strong>
+                            {% if cob.descricao %}
+                            <div class="text-muted" style="font-size: 0.8rem;">{{ cob.descricao }}</div>
+                            {% endif %}
+                        </td>
+                        <td><strong>R$ {{ "%.2f"|format(cob.valor) }}</strong></td>
+                        <td>
+                            {{ cob.data_formatada }}
+                            {% if cob.atrasada %}
+                            <span class="badge bg-danger" style="margin-left: 4px;">Atrasada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('enviar_cobranca', cobranca_id=cob.id) }}" method="POST" class="delete-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit"
+                                        class="btn-whatsapp btn-sm"
+                                        title="Enviar pelo WhatsApp"
+                                        onclick="return confirm('Enviar cobrança para {{ cob.cliente_nome }}?')">
+                                    <i class="fab fa-whatsapp"></i> Enviar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-check-double fa-2x"></i>
+            <p>Nenhuma cobrança pendente no momento!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Top Clientes por Volume de Cobranças -->
+    <div class="card dashboard-panel">
+        <div class="panel-header">
+            <h3 class="card-title"><i class="fas fa-medal"></i> Principais Clientes</h3>
+            <a href="{{ url_for('listar_clientes') }}" class="panel-link">Ver todos &rarr;</a>
+        </div>
+
+        {% if top_clientes %}
+        <div class="top-clients-list">
+            {% for cl in top_clientes %}
+            <div class="top-client-item">
+                <div class="top-client-avatar">
+                    {% if cl.foto %}
+                    <img src="{{ url_for('uploaded_file', filename=cl.foto) }}" alt="{{ cl.nome }}">
+                    {% else %}
+                    <i class="fas fa-user-circle"></i>
+                    {% endif %}
+                </div>
+                <div class="top-client-info">
+                    <strong>{{ cl.nome }}</strong>
+                    <span>{{ cl.qtd_cobrancas }} cobrança(s) &bull; Pendente: R$ {{ "%.2f"|format(cl.valor_pendente) }}</span>
+                </div>
+                <div class="top-client-amount">
+                    <span class="amount-total">R$ {{ "%.2f"|format(cl.total_valor) }}</span>
+                    <a href="{{ url_for('agendar_cobranca', cliente_id=cl.id) }}" class="amount-link" title="Agendar Cobrança">
+                        <i class="fas fa-calendar-plus"></i> Cobrar
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users fa-2x"></i>
+            <p>Nenhum cliente cadastrado ainda.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

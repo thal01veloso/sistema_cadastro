@@ -10,6 +10,7 @@
         <div class="card-body">
             <!-- Formulário de agendamento -->
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="valor">Valor</label>
                     <input type="number" step="0.01" class="form-control" id="valor" name="valor" required>
@@ -61,12 +62,15 @@
                                     </td>
                                     <td>
                                         {% if cobranca.status == 'pendente' %}
-                                        <a href="{{ url_for('enviar_cobranca', cobranca_id=cobranca.id) }}" 
-                                           class="btn btn-sm btn-success"
-                                           title="Enviar pelo WhatsApp"
-                                           onclick="return confirm('Enviar cobrança para {{ cobranca.cliente_nome }}?')">
-                                            <i class="fab fa-whatsapp"></i> Enviar
-                                        </a>
+                                        <form action="{{ url_for('enviar_cobranca', cobranca_id=cobranca.id) }}" method="POST" class="delete-form">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit"
+                                                    class="btn-whatsapp btn-sm"
+                                                    title="Enviar pelo WhatsApp"
+                                                    onclick="return confirm('Enviar cobrança para {{ cliente.nome }}?')">
+                                                <i class="fab fa-whatsapp"></i> Enviar
+                                            </button>
+                                        </form>
                                         {% else %}
                                         <span class="text-muted">
                                             {% if cobranca.data_envio %}

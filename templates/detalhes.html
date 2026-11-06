@@ -1,37 +1,138 @@
 {% extends "base.html" %}
+
+{% block title %}Detalhes de {{ cliente.nome }}{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h4>Detalhes do Cliente</h4>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4 text-center">
-                    <div class="client-avatar mb-3">
-                        <i class="fas fa-user-circle fa-5x"></i> <!-- Ícone placeholder -->
-                    </div>
-                    <h3>{{ cliente['nome'] }}</h3>
-                </div>
-                <div class="col-md-8">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><strong>ID:</strong> {{ cliente['id'] }}</li>
-                        <li class="list-group-item"><strong>E-mail:</strong> {{ cliente['email'] }}</li>
-                        <li class="list-group-item"><strong>Telefone:</strong> {{ cliente['telefone'] }}</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="card-footer">
-            <a href="{{ url_for('listar_clientes') }}" class="btn btn-secondary">
+<div class="card">
+    <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 class="card-title" style="margin-bottom: 0;">Detalhes do Cliente</h2>
+        <div class="action-buttons" style="margin-top: 0; width: auto;">
+            <a href="{{ url_for('editar_cliente', id=cliente.id) }}" class="btn-action btn-edit">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            {% if cliente.telefone %}
+            <a href="{{ url_for('agendar_cobranca', cliente_id=cliente.id) }}" class="btn-action btn-whatsapp">
+                <i class="fas fa-calendar-plus"></i> Nova Cobrança
+            </a>
+            {% endif %}
+            <a href="{{ url_for('listar_clientes') }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 14px;">
                 <i class="fas fa-arrow-left"></i> Voltar
             </a>
         </div>
     </div>
-</div>
-<div class="detalhes-footer">
-    <a href="{{ url_for('listar_clientes') }}" class="btn-voltar">
-        <i class="fas fa-arrow-left"></i> Voltar para Clientes
-    </a>
+
+    <div class="client-profile-header">
+        <div class="client-avatar" style="margin-bottom: 0;">
+            {% if cliente.foto %}
+            <img src="{{ url_for('uploaded_file', filename=cliente.foto) }}" alt="{{ cliente.nome }}" class="client-photo">
+            {% else %}
+            <i class="fas fa-user-circle fa-5x" style="color: var(--primary-color);"></i>
+            {% endif %}
+        </div>
+        <div class="client-profile-info">
+            <h3>{{ cliente.nome }}</h3>
+            <p><i class="fas fa-envelope"></i> {{ cliente.email or 'Sem e-mail' }}</p>
+            <p><i class="fas fa-phone"></i> {{ cliente.telefone or 'Não informado' }}</p>
+            <p class="text-muted"><i class="fas fa-hashtag"></i> ID: {{ cliente.id }}</p>
+        </div>
+    </div>
+
+    <!-- Resumo Financeiro do Cliente -->
+    <div class="kpi-grid" style="margin-top: 1.5rem;">
+        <div class="kpi-card kpi-primary">
+            <div class="kpi-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Total Cobrado</span>
+                <h3 class="kpi-value">R$ {{ "%.2f"|format(resumo.valor_total or 0) }}</h3>
+                <span class="kpi-meta">{{ resumo.total_cobrancas or 0 }} cobrança(s) registrada(s)</span>
+            </div>
+        </div>
+        <div class="kpi-card kpi-warning">
+            <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Pendente</span>
+                <h3 class="kpi-value">R$ {{ "%.2f"|format(resumo.valor_pendente or 0) }}</h3>
+                <span class="kpi-meta">Aguardando envio/pagamento</span>
+            </div>
+        </div>
+        <div class="kpi-card kpi-success">
+            <div class="kpi-icon"><i class="fas fa-check"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Enviado</span>
+                <h3 class="kpi-value">R$ {{ "%.2f"|format(resumo.valor_enviado or 0) }}</h3>
+                <span class="kpi-meta">Já disparado no WhatsApp</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Cobranças -->
+    <h3 class="card-title" style="margin-top: 1rem;">Histórico de Cobranças</h3>
+    {% if cobrancas %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Valor</th>
+                    <th>Descrição</th>
+                    <th>Agendamento</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cobranca in cobrancas %}
+                <tr>
+                    <td><strong>R$ {{ "%.2f"|format(cobranca.valor) }}</strong></td>
+                    <td>{{ cobranca.descricao or '-' }}</td>
+                    <td>{{ cobranca.data_formatada }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if cobranca.status == 'pendente' %}bg-warning
+                            {% elif cobranca.status in ['enviada', 'paga'] %}bg-success
+                            {% elif cobranca.status == 'cancelada' %}bg-danger
+                            {% else %}bg-secondary{% endif %}">
+                            {{ cobranca.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            {% if cobranca.status in ['pendente', 'enviada'] %}
+                            <form action="{{ url_for('enviar_cobranca', cobranca_id=cobranca.id) }}" method="POST" class="delete-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit"
+                                        class="btn-whatsapp btn-sm"
+                                        onclick="return confirm('Enviar cobrança pelo WhatsApp para {{ cliente.nome }}?')">
+                                    <i class="fab fa-whatsapp"></i> {% if cobranca.status == 'pendente' %}Enviar{% else %}Reenviar{% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if cobranca.status != 'paga' %}
+                            <form action="{{ url_for('alterar_status_cobranca', cobranca_id=cobranca.id) }}" method="POST" class="delete-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="status" value="paga">
+                                <button type="submit" class="btn-action btn-sm" style="background: var(--success-color); color: #fff;" title="Marcar como Paga">
+                                    <i class="fas fa-check"></i> Paga
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form action="{{ url_for('excluir_cobranca', cobranca_id=cobranca.id) }}" method="POST" class="delete-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-action btn-delete btn-sm" onclick="return confirm('Excluir esta cobrança?')" title="Excluir">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-calendar-times fa-2x"></i>
+        <p>Nenhuma cobrança registrada para este cliente.</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

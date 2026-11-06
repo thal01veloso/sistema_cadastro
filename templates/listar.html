@@ -4,11 +4,16 @@
 
 {% block content %}
 <div class="card">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="card-title">Clientes Cadastrados</h2>
-        <a href="{{ url_for('cadastrar_clientes') }}" class="btn">
-            <i class="fas fa-plus"></i> Novo Cliente
-        </a>
+    <div class="flex justify-between items-center mb-6" style="flex-wrap: wrap; gap: 0.75rem;">
+        <h2 class="card-title" style="margin-bottom: 0;">Clientes Cadastrados</h2>
+        <div class="dashboard-actions">
+            <a href="{{ url_for('exportar_clientes_csv') }}" class="btn btn-secondary">
+                <i class="fas fa-file-csv"></i> Exportar CSV
+            </a>
+            <a href="{{ url_for('cadastrar_clientes') }}" class="btn">
+                <i class="fas fa-plus"></i> Novo Cliente
+            </a>
+        </div>
     </div>
     
     <!-- Campo de busca -->
